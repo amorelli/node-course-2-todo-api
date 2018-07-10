@@ -1,3 +1,5 @@
+// C:\Program Files\MongoDB\Server\4.0\bin mongod.exe --dbpath C:\Users\Adam\mongo-data
+
 const _ = require('lodash');
 const express = require('express');
 const bodyParser = require('body-parser');
