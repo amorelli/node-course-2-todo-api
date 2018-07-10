@@ -1,4 +1,5 @@
 // C:\Program Files\MongoDB\Server\4.0\bin mongod.exe --dbpath C:\Users\Adam\mongo-data
+var config = require('./config/config');
 
 const _ = require('lodash');
 const express = require('express');
@@ -10,7 +11,7 @@ var {User} = require('./models/user');
 const {ObjectID} = require('mongodb');
 
 var app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT;
 
 app.use(bodyParser.json());
 
