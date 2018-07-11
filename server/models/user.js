@@ -83,6 +83,29 @@ UserSchema.pre('save', function (next) {
 		next();
 	}
 });
+// Model method, takes email and password, returning a Promise with user, or error if user didn't exist.
+// Find user where email == email passed in.
+UserSchema.statics.findByCredentials = function (email, password) {
+	var User = this;
+	// Find user with email property == to email variable
+	// return to chain the promise, since there is a .then call and a .catch call in server.js POST /users/login
+	return User.findOne({email}).then((user) => {
+		// If no user, return rejected Promise
+		if (!user) {
+			return Promise.reject();
+		}
+
+		return new Promise((resolve, reject) => {
+			bcrypt.compare(password, user.password, (err, res) => {
+				if (res) {
+					resolve(user);
+				} else {
+					reject();
+				};
+			});
+		});
+	});
+};
 
 // Mongoose User Model
 var User = mongoose.model('User', UserSchema);
