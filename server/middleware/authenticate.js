@@ -7,7 +7,7 @@ var authenticate = (req, res, next) => {
 		if (!user) {
 			return Promise.reject();
 		}
-
+		//Store the user and their token
 		req.user = user;
 		req.token = token;
 		next();
