@@ -56,7 +56,7 @@ UserSchema.methods.generateAuthToken = function () {
 UserSchema.methods.removeToken = function (token) {
 	var user = this;
 	// $pull is a MongoDB operator, remove items from an array that match criteria
-	// Pass in $pull as the update object. No user query required because we already have the user we are updating.
+	// Pass in $pull as the user.update object. No user query required because we already have the user we are updating.
 	// Pull from tokens array, any object that has a token property equal to the token argument passed in to the function
 	// Entire token object is removed
 	return user.update({
@@ -65,7 +65,7 @@ UserSchema.methods.removeToken = function (token) {
 		}
 	});
 };
-
+// Find user by token
 UserSchema.statics.findByToken = function (token) {
 	var User = this;
 	var decoded;
@@ -73,6 +73,7 @@ UserSchema.statics.findByToken = function (token) {
 	try {
 		decoded = jwt.verify(token, 'abc123');
 	} catch (e) {
+		//Breaks out of the function
 		return Promise.reject();
 	}
 

@@ -15,6 +15,12 @@ var Todo = mongoose.model('Todo', {
 	completedAt: {
 		type: Number,
 		default: null
+	},
+	// Store the user id who created the todo. Can only create a todo if logged in
+	// Type is set as an ObjectId
+	_creator: {
+		type: mongoose.Schema.Types.ObjectId,
+		required: true
 	}
 });
 
