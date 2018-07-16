@@ -326,7 +326,7 @@ describe('POST /users/login', () => {
 			// Find user that we created a token for. Make sure x-auth token from this user was added to the tokens array.
 			// Make sure the tokens object has the properties access and res.headers
 			User.findById(users[1]._id).then((user) => {
-				expect(user.tokens[1]).toMatchObject({
+				expect(user.toObject().tokens[1]).toMatchObject({
 					access: 'auth',
 					token: res.headers['x-auth']
 				});
