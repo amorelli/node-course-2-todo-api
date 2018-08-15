@@ -11,7 +11,7 @@ const {todos, populateTodos, users, populateUsers} = require('./seed/seed');
 beforeEach(populateUsers);
 beforeEach(populateTodos);
 
-describe('POST /todos', () => {
+describe('POST /todos', async () => {
 	it('Should create a new Todo', (done) => {
 		var text = 'Test todo text';
 
@@ -23,16 +23,18 @@ describe('POST /todos', () => {
 			.expect((res) => {
 				expect(res.body.text).toBe(text);
 			})
-			.end((err, res) => {
+			.end(async (err, res) => {
 				if (err) {
 					return done(err);
 				}
-
-				Todo.find({text}).then((todos) => {
+				try {
+					const todos = await Todo.find({text});
 					expect(todos.length).toBe(1);
 					expect(todos[0].text).toBe(text);
 					done();
-				}).catch((e) => done(e));
+				} catch (e) { 
+					done(e);
+				}
 			});
 	});
 
@@ -42,15 +44,17 @@ describe('POST /todos', () => {
 		.set('x-auth', users[0].tokens[0].token)
 		.send({})
 		.expect(400)
-		.end((err, res) => {
+		.end(async (err, res) => {
 			if (err) {
 				return done(err);
 			}
-
-			Todo.find().then((todos) => {
+			try {
+				const todos = await Todo.find();
 				expect(todos.length).toBe(2);
 				done();
-			}).catch((e) => done(e));
+			} catch (e) {
+				done(e);
+			}
 		});
 	});
 });
@@ -116,15 +120,17 @@ describe('DELETE /todos/:id', () => {
 		.expect((res) => {
 			expect(res.body.todo._id).toBe(hexId);
 		})
-		.end((err, res) => {
+		.end(async (err, res) => {
 			if (err) {
 				return done(err);
 			}
-
-			Todo.findById(hexId).then((todo) => {
+			try {
+				const todo = await Todo.findById(hexId);
 				expect(todo).toBeFalsy();
 				done();
-			}).catch((e) => done(e));
+			} catch (e) {
+				done(e);
+			}
 		});
 	});
 
@@ -135,15 +141,17 @@ describe('DELETE /todos/:id', () => {
 		.delete(`/todos/${hexId}`)
 		.set('x-auth', users[1].tokens[0].token)
 		.expect(404)
-		.end((err, res) => {
+		.end(async (err, res) => {
 			if (err) {
 				return done(err);
 			}
-
-			Todo.findById(hexId).then((todo) => {
+			try {
+				const todo = await Todo.findById(hexId);
 				expect(todo).toBeTruthy();
 				done();
-			}).catch((e) => done(e));
+			} catch (e) {
+				done(e);
+			}
 		});
 	});
 
@@ -267,18 +275,21 @@ describe('POST /users', () => {
 			expect(res.body._id).toBeTruthy();
 			expect(res.body.email).toBe(email);
 			// Query thr database to check for errors,
-		}).end((err) => {
+		}).end(async (err) => {
 			if (err) {
 				return done(err);
 			}
-			// If no error, query database for user, check if email in db equals the email we set above
-			User.findOne({email}).then((user) => {
+			try {
+				// If no error, query database for user, check if email in db equals the email we set above
+				const user = await User.findOne({email});
 				// Check if the user exists
 				expect(user).toBeTruthy();
 				// Check if the password was hashed (does not equal the password we set above)
 				expect(user.password).not.toBe(password);
 				done();
-			}).catch((e) => done(e));
+			} catch (e) {
+				done(e);
+			}
 		});
 	});
 	// Tests invalid email, or password < 6 chars
@@ -319,20 +330,23 @@ describe('POST /users/login', () => {
 			expect(res.headers['x-auth']).toBeTruthy();
 		})
 		// Async function to query database. 
-		.end((err, res) => {
+		.end(async (err, res) => {
 			if (err) {
 				return done(err);
 			}
-			// Find user that we created a token for. Make sure x-auth token from this user was added to the tokens array.
-			// Make sure the tokens object has the properties access and res.headers
-			User.findById(users[1]._id).then((user) => {
+			try {
+				// Find user that we created a token for. Make sure x-auth token from this user was added to the tokens array.
+				// Make sure the tokens object has the properties access and res.headers
+				const user = await User.findById(users[1]._id);
 				expect(user.toObject().tokens[1]).toMatchObject({
 					access: 'auth',
 					token: res.headers['x-auth']
 				});
 				done();
 				// Catch error from the async test if expect call above is not equal. Throws a useful error message.
-			}).catch((e) => done(e));
+			} catch (e) {
+				done(e);
+			}
 		});
 	});
 
@@ -349,17 +363,20 @@ describe('POST /users/login', () => {
 			expect(res.headers['x-auth']).toBeFalsy();
 		})
 		// Async function to query database. 
-		.end((err, res) => {
+		.end(async (err, res) => {
 			if (err) {
 				return done(err);
 			}
-			// Find user that we created a token for. Make sure x-auth token from this user was added to the tokens array.
-			// Make sure the tokens object has the properties access and res.headers
-			User.findById(users[1]._id).then((user) => {
+			try {
+				// Find user that we created a token for. Make sure x-auth token from this user was added to the tokens array.
+				// Make sure the tokens object has the properties access and res.headers
+				const user = await User.findById(users[1]._id);
 				expect(user.tokens.length).toBe(1);
 				done();
 				// Catch error from the async test if expect call above is not equal. Throws a useful error message.
-			}).catch((e) => done(e));
+			} catch (e) {
+				done(e);
+			}
 		});
 	});
 });
@@ -371,15 +388,17 @@ describe('DELETE /users/me/token', () => {
 		// Sets x-auth equal to token value from seed.js
 		.set('x-auth', users[0].tokens[0].token)
 		.expect(200)
-		.end((err, res) => {
+		.end(async (err, res) => {
 			if (err) {
 				return done(err);
 			}
-
-			User.findById(users[0]._id).then((user) => {
+			try {
+				const user = await User.findById(users[0]._id);
 				expect(user.tokens.length).toBe(0);
 				done();
-			}).catch((e) => done(e));
+			} catch (e) {
+				done(e);
+			}
 		});
 
 	});
