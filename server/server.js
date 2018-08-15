@@ -16,47 +16,64 @@ const port = process.env.PORT;
 
 app.use(bodyParser.json());
 
-app.post('/todos', authenticate, (req, res) => {
+app.post('/todos', authenticate, async (req, res) => {
 	// Post a todo with the creator property, making the todo private
-	var todo = new Todo({
-		text: req.body.text,
-		_creator: req.user._id
-	});
+	try {
+		var todo = new Todo({
+			text: req.body.text,
+			_creator: req.user._id
+		});
 
-	todo.save().then((doc) => {
+		const doc = await todo.save();
 		res.send(doc);
-	}, (e) => {
+	} catch (e) {
 		res.status(400).send(e);
-	});
+	};
 });
 
-app.get('/todos', authenticate, (req, res) => {
+app.get('/todos', authenticate, async (req, res) => {
 	// Find all todos for the logged in user
-	Todo.find({
-		_creator: req.user._id
-	}).then((todos) => {
+	try {
+		const todos = await Todo.find({
+			_creator: req.user._id
+			});
 		res.send({todos});
-	}, (e) => {
+	} catch (e) {
 		res.status(400).send(e);
-	});
+	}
 });
 
-app.get('/todos/:id', authenticate, (req, res) => {
-	var id = req.params.id;
+app.get('/todos/:id', authenticate, async (req, res) => {
+	const id = req.params.id;
 	if (!ObjectID.isValid(id)) {
 		return res.status(404).send();
 	}
+	try {
+		const todo = await Todo.findOne({
+			_id: id, 
+			_creator: req.user._id
+		});
 
-	Todo.findOne({
-		_id: id, 
-		_creator: req.user._id
-	}).then((todo) => {
 		if (!todo) {
-			return res.status(404).send();
-		}
+				return res.status(404).send();
+			}
 
 		res.send({todo});
-	}).catch((e) => res.status(400).send());
+	} catch (e) {
+		res.status(400).send();
+	}
+
+//** Old code -- Promise chaining, updated with async / await
+	// Todo.findOne({
+	// 	_id: id, 
+	// 	_creator: req.user._id
+	// }).then((todo) => {
+	// 	if (!todo) {
+	// 		return res.status(404).send();
+	// 	}
+
+	// 	res.send({todo});
+	// }).catch((e) => res.status(400).send());
 });
 
 app.delete('/todos/:id', authenticate, async (req, res) => {
@@ -69,7 +86,7 @@ app.delete('/todos/:id', authenticate, async (req, res) => {
 			_id: id,
 			_creator: req.user._id
 		});
-		
+
 		if (!todo) {
 			return res.status(404).send();
 		}
@@ -81,8 +98,8 @@ app.delete('/todos/:id', authenticate, async (req, res) => {
 
 });
 
-app.patch('/todos/:id', authenticate, (req, res) => {
-	var id = req.params.id;
+app.patch('/todos/:id', authenticate, async (req, res) => {
+	const id = req.params.id;
 	const body = _.pick(req.body, ['text', 'completed']);
 
 	if (!ObjectID.isValid(id)) {
@@ -96,18 +113,20 @@ app.patch('/todos/:id', authenticate, (req, res) => {
 		body.completedAt = null;
 	}
 
-	Todo.findOneAndUpdate({
-		_id: id,
-		_creator: req.user._id
-	}, {$set: body}, {new: true}).then((todo) => {
+	try {
+		const todo = await Todo.findOneAndUpdate({
+			_id: id,
+			_creator: req.user._id
+		}, {$set: body}, {new: true});
+
 		if (!todo) {
 			return res.status(404).send();
 		}
 
-		res.send({todo});
-			}).catch((e) => {
+		res.send({todo}); 
+	} catch (e) {
 		res.status(400).send();
-	});
+	};
 });
 
 app.post('/users', async (req, res) => {
