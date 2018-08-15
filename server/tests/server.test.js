@@ -344,7 +344,7 @@ describe('POST /users/login', () => {
 			password: users[1].password + '1'
 		})
 		.expect(400)
-		// Verify x-auth token sent back as header
+		// Verify x-auth token not sent back as header
 		.expect((res) => {
 			expect(res.headers['x-auth']).toBeFalsy();
 		})
