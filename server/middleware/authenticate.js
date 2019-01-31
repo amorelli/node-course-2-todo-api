@@ -18,4 +18,18 @@ var authenticate = async (req, res, next) => {
 	};
 };
 
-module.exports = {authenticate};
+var sendAuth = async (req, res, next) => {
+  try {
+    const body = _.pick(req.body, ['email', 'password']);
+    const user = new User(body);
+		await user.save();
+		const token = await user.generateAuthToken();
+    res.header('x-auth', token).send(user);
+    res.end();
+  } catch(e) {
+    res.status(401).send();
+  };
+
+};
+
+module.exports = {authenticate, sendAuth};

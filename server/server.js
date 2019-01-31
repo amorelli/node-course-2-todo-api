@@ -2,6 +2,7 @@
 var config = require('./config/config');
 
 const _ = require('lodash');
+const engine = require('consolidate');
 const express = require('express');
 const bodyParser = require('body-parser');
 const {ObjectID} = require('mongodb');
@@ -9,12 +10,21 @@ const {ObjectID} = require('mongodb');
 var {mongoose} = require('./db/mongoose');
 var {Todo} = require('./models/todo');
 var {User} = require('./models/user');
-var {authenticate} = require('./middleware/authenticate');
+var {authenticate, sendAuth} = require('./middleware/authenticate');
 
 var app = express();
 const port = process.env.PORT;
 
+app.set('views', __dirname + '/../public/views');
+app.engine('html', engine.mustache);
+app.set('view engine', 'html');
+
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+app.get('/', function(req, res){
+  res.render('index.html');
+});
 
 app.post('/todos', authenticate, async (req, res) => {
 	// Post a todo with the creator property, making the todo private
@@ -23,7 +33,6 @@ app.post('/todos', authenticate, async (req, res) => {
 			text: req.body.text,
 			_creator: req.user._id
 		});
-
 		const doc = await todo.save();
 		res.send(doc);
 	} catch (e) {
@@ -131,13 +140,13 @@ app.patch('/todos/:id', authenticate, async (req, res) => {
 
 app.post('/users', async (req, res) => {
 	try {
-		const body = _.pick(req.body, ['email', 'password']);
-		const user = new User(body);
+    const body = _.pick(req.body, ['email', 'password']);
+    const user = new User(body);
 		await user.save();
 		const token = await user.generateAuthToken();
-		res.header('x-auth', token).send(user);
+    res.header('x-auth', token).send(user);
 	} catch (e) {
-		res.status(400).send(e);
+    res.status(400).send(e);
 	}
 });
 
